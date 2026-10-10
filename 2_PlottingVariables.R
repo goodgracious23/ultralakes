@@ -47,15 +47,25 @@ ggplot(chlorophyll %>% filter(!chlor > 110),
   geom_smooth(method = "gam") + 
   theme_bw() 
 
-ggplot(summer_chlorophyll %>% filter(!lakename == "Tuesday Lake", 
-                                     # !(lakename == "Peter Lake" & year4 == 2024),
-                                     !groups == "Dystrophic",
-                                     !lakename == "Crystal Lake"), 
-       aes(x = mean_chl, y = mean_density, color = lakename)) +
+ggplot(summer_chlorophyll %>% 
+         filter(!lakename == "Tuesday Lake",
+                !(lakename == "Sparkling Lake" & year4 == 2006),
+                # !(lakename == "Peter Lake" & year4 >= 2024),
+                # !(lakename == "Peter Lake" & year4 >= 2019),
+                !groups == "Dystrophic",
+                !lakename == "Crystal Lake") %>%
+         mutate(color_group = case_when(lakeid == "SP" & year4 < 2021 ~ "gray50",
+                                        lakeid == "SP" & year4 >= 2021 ~ "blue",
+                                        lakeid == "L" ~ "gray50",
+                                        lakeid == "R" & year4 <= 2011 ~ "orange",
+                                        lakeid == "R" & year4 > 2011 ~ "green",
+                                        lakeid == "TR" & year4 <= 2013 ~ "red",
+                                        lakeid == "TR" & year4 > 2013 ~ "black")), 
+       aes(x = mean_chl, y = mean_biomass, color = color_group)) +
   geom_point(size = 2) + 
   geom_path(linewidth = 1) +
   geom_text(aes(label = year4), vjust = -0.7, size = 3) +
-  facet_wrap(~groups, scale = "free") + 
+  facet_wrap(~lakeid, scale = "free") +
   # scale_y_continuous(transform = "log10") + scale_x_continuous(transform = "log10") +
   theme_bw() + 
-  labs(x = "Mean Summer Chlorophyll", y = "Mean Large-bodied Cladoceran Density")
+  labs(x = "Mean Summer Chlorophyll", y = "Cladoceran Biomass (mg/L)")

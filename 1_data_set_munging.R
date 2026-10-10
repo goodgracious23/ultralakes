@@ -65,19 +65,15 @@ ntl_zoops =
          year4 >= 2005)
 
 ntl_daphnia = ntl_zoops %>%
-  filter(stringr::str_detect(species_name, "DAPHNIA") |
-         stringr::str_detect(species_name, "DIAPHANOSOMA")) %>%
-  mutate(sampledate = mdy(sample_date)) %>%
-  group_by(lakeid, year4, sampledate) %>%
-  summarize(density = sum(density, na.rm = TRUE),
-            avg_length = mean(avg_length, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(month = month(sampledate)) %>%
-  filter(month >= 5, month <= 8) %>%
+  mutate(sampledate = mdy(sample_date), month = month(sampledate)) %>%
+  filter(month >= 5, month <= 8,
+         stringr::str_detect(species_name, "DAPHNIA")) %>%
+  mutate(avg_length = case_when(year4 <= 2022 ~ avg_length,
+                                year4 >2022 ~ avg_length/1000),
+         biomass = ((1.5*10^-8)*(avg_length*1000)^2.84)*density) %>%
   group_by(lakeid, year4) %>%
-  summarize(mean_density = median(density, na.rm = TRUE),
-            mean_length = mean(avg_length, na.rm = TRUE)) %>%
-  ungroup() 
+  summarize(mean_biomass = median(biomass, na.rm = TRUE)) %>%
+  ungroup()
          
 ntl_fish = 
   read_csv("ntl7_v15_fish.csv") %>%
@@ -116,19 +112,16 @@ cascade_chl = read_csv("cascade_processData_V0.5_routines.csv") %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate))
 
 cascade_zoops = read_csv("cascade_zooplankton_v07.csv") %>%
-  select(lakeid, year4, sampledate, standard_taxon_code, taxon_name, mean_length, abundance, biomass) %>%
+  select(lakeid, year4, sampledate, standard_taxon_code, group_code, taxon_name, mean_length, abundance, biomass) %>%
   filter(year4 >= 2008, lakeid == "R" | lakeid == "L" | lakeid == "T") %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate))
 
 cascade_daphnia = cascade_zoops %>% 
-  filter(standard_taxon_code == "DAPH" | standard_taxon_code == "DIAPH" | standard_taxon_code == "CDAP") %>%
+  mutate(month = month(sampledate)) %>%
+  filter(group_code == "CLAD") %>%
   group_by(lakeid, year4) %>%
-  summarize(mean_density = median(abundance, na.rm = TRUE)/1000,
-            mean_biomass = mean(biomass, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(mean_density = case_when(lakeid == "R" ~ mean_density/12,
-                                  lakeid == "L" ~ mean_density/8,
-                                  lakeid == "T" ~ mean_density/10))
+  summarize(mean_biomass = median(biomass*10, na.rm = TRUE)) %>%
+  ungroup()
 
 # Combined Data ==========================================
 g440 = rbind(cascade_carbon, ntl_color) %>%
@@ -182,8 +175,7 @@ chlorophyll = rbind(cascade_chl, ntl_chl) %>%
                               lakeid == "TB" ~ "Trout Bog",
                               lakeid == "TR" ~ 'Trout Lake')) 
 
-daphnia = full_join(cascade_daphnia, ntl_daphnia, by = c("lakeid", "year4", "mean_density"))
-
+daphnia = rbind(cascade_daphnia, ntl_daphnia) 
 
 summer_chlorophyll = chlorophyll %>%
   group_by(lakeid, year4) %>%
