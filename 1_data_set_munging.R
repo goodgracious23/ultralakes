@@ -2,16 +2,22 @@ library(tidyverse)
 
 # NTL LTER Data Sets =======================
 ntl_nuts = 
-  read_csv("ntl1_v15_nuts.csv") %>%
+  read_csv("data/ntl1_v15_nuts.csv") %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005, depth == 0)
 
+spark_doc = ntl_nuts %>% 
+  mutate(sampledate = mdy(sampledate), month = month(sampledate)) %>%
+  filter(lakeid == "SP", 
+         year4 == 2012 | year4 == 2013 | year4 == 2021 | year4 == 2022,
+         month >= 5, month <= 9)
+
 ntl_ions = 
-  read_csv("ntl2_v15_ions.csv") %>%
+  read_csv("data/ntl2_v15_ions.csv") %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005, depth == 0)
 
 
 ntl_ice = 
-  read_csv("ntl32_v10_ice.csv") %>%
+  read_csv("data/ntl32_v10_ice.csv") %>%
   rename(year4 = year) %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR") %>%
   mutate(lastopen = mdy(lastopen), lastopen_doy = yday(lastopen),
@@ -30,7 +36,7 @@ ntl_ice_avg = ntl_ice %>%
   mutate(ice_off_anomaly = ice_off_doy - 111.36)
 
 ntl_met = 
-  read_csv("ntl18_v11_met.csv") %>%
+  read_csv("data/ntl18_v11_met.csv") %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate),
          wateryear = case_when(month < 10 ~ year4, 
                                month >= 10 ~ year4+1)) 
@@ -54,13 +60,13 @@ wateryear_precip = left_join(total_precip, summer_precip, by = "wateryear") %>% 
   left_join(., ntl_ice_avg, by = "year4")
 
 ntl_chl = 
-  read_csv("ntl35_v6_chl.csv") %>%
+  read_csv("data/ntl35_v6_chl.csv") %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate)) %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005, depth == 0, month >= 5, month <= 9) %>%
   select(lakeid, year4, sampledate, depth, chlor, phaeo, month)
 
 ntl_color = 
-  read_csv("ntl87_v15_color.csv") %>%
+  read_csv("data/ntl87_v15_color.csv") %>%
   filter(wavelength == 440) %>%
   mutate(sampledate = mdy(sampledate), 
          month = month(sampledate),
@@ -69,13 +75,13 @@ ntl_color =
   select(lakeid, year4, month, sampledate, g440)
 
 ntl_light = 
-  read_csv("ntl259_v11_light.csv") %>%
+  read_csv("data/ntl259_v11_light.csv") %>%
   mutate(sampledate = mdy(sampledate), year4 = year(sampledate), month = month(sampledate)) %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005, month >= 5, month <= 9) %>%
   select(lakeid, sampledate, year4, extcoef)
 
 ntl_zoops = 
-  read_csv("ntl37_v15_zoops.csv") %>%
+  read_csv("data/ntl37_v15_zoops.csv") %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005)
 
 ntl_daphnia = ntl_zoops %>%
@@ -91,12 +97,12 @@ ntl_daphnia = ntl_zoops %>%
 
          
 ntl_fish = 
-  read_csv("ntl7_v15_fish.csv") %>%
+  read_csv("data/ntl7_v15_fish.csv") %>%
   filter(lakeid == "SP" | lakeid == "TR" | lakeid == "CB" | lakeid == "TB" | lakeid == "CR", year4 >= 2005)
 
 
 # Cascade Data ============================================
-cascade_carbon = read_csv("cascade_carbon_v05.csv") %>%
+cascade_carbon = read_csv("data/cascade_carbon_v05.csv") %>%
   select(lakeid, lakename, year4, daynum, sampledate, depth, depth_id, doc, absorbance) %>%
   filter(year4 >= 2008, lakeid == "R" | lakeid == "L" | lakeid == "T",
          depth == "PML") %>%
@@ -105,7 +111,7 @@ cascade_carbon = read_csv("cascade_carbon_v05.csv") %>%
          month = month(sampledate)) %>%
   select(lakeid, year4, month, sampledate, g440)
 
-cascade_light = read_csv("cascade_PhysicalChemicalLimnology_v0.7.csv") %>%
+cascade_light = read_csv("data/cascade_PhysicalChemicalLimnology_v0.7.csv") %>%
   filter(year4 >= 2005, lakeid == "R" | lakeid == "L" | lakeid == "T",
          !is.na(irradianceWater), !is.na(irradianceDeck),
          !irradianceWater <= 0) %>%
@@ -125,7 +131,7 @@ cascade_chl = read_csv("cascade_processData_V0.5_routines.csv") %>%
   rename(chlor = chla) %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate))
 
-cascade_zoops = read_csv("cascade_zooplankton_v07.csv") %>%
+cascade_zoops = read_csv("data/cascade_zooplankton_v07.csv") %>%
   select(lakeid, year4, sampledate, standard_taxon_code, group_code, taxon_name, mean_length, abundance, biomass) %>%
   filter(year4 >= 2008, lakeid == "R" | lakeid == "L" | lakeid == "T") %>%
   mutate(sampledate = mdy(sampledate), month = month(sampledate))
