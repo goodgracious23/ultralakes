@@ -143,3 +143,54 @@ ggplot() +
                      labels = function(x) paste0(abs(x), "°W")) +
   scale_y_continuous(breaks = seq(46, 46.3, by = 0.1),
                      labels = function(x) paste0(x, "°N"))
+
+
+# Timeline Figure =======================
+lakes = read_csv("data/ultralakes.csv") %>%
+  mutate(lake = factor(lake, levels = c("Peter", "Paul", "Tuesday", 
+                                        "LittleRock", "Crampton",
+                                        "CrystalBog", "TroutBog",
+                                        "Crystal", "Trout", "Sparkling")),
+         event = case_when(event == 'a' ~ 'ambient',
+                           event == 'b' ~ 'fish addition',
+                           event == 'c' ~ 'crayfish removal',
+                           event == 'd' ~ 'zoop invasion',
+                           event == 'e' ~ 'nutrient addition',
+                           event == 'f' ~ 'dye + nutrient',
+                           event == 'g' ~ 'dye addition',
+                           event == 'h' ~ 'mixing'),
+         event = factor(event, levels = c('fish addition',
+                                          'crayfish removal',
+                                          'zoop invasion',
+                                          'nutrient addition',
+                                          'dye + nutrient',
+                                          'dye addition',
+                                          'mixing', 
+                                          'ambient'))) %>%
+  filter(!is.na(event)) %>% rename(manipulation = event)
+
+# Horizontal Orientation
+ggplot(lakes, aes(x = year, y = lake, color = manipulation)) +
+  # geom_line(linewidth = 1, na.rm = TRUE) +
+  geom_point(aes(size = manipulation), shape = 19, alpha = 0.7) +
+  scale_size_manual(values = c(4, 4, 4, 4, 4, 4, 4, 3)) + 
+  scale_color_manual(values = c("#ee9b00", "#e36414","#9a031e",
+                               "#6a994e", "#0a9396", "#005f73", 
+                               "#5f0f40", "gray70")) +
+  theme_minimal() + xlab("") + ylab("") + 
+  theme(legend.key.height = unit(0.5, "cm"),
+        legend.title = element_blank())
+
+# Vertical Orientation
+ggplot(lakes, aes(y = year, x = lake, color = manipulation)) +
+  scale_x_discrete(position = "top") +
+  # geom_line(linewidth = 1, na.rm = TRUE) +
+  geom_point(aes(size = manipulation), shape = 19, alpha = 0.7) +
+  scale_size_manual(values = c(4, 4, 4, 4, 4, 4, 4, 3)) + 
+  scale_color_manual(values = c("#ee9b00", "#e36414","#9a031e",
+                                "#6a994e", "#0a9396", "#005f73", 
+                                "#5f0f40", "gray70")) +
+  theme_minimal() + xlab("") + ylab("") + 
+  theme(legend.key.height = unit(0.5, "cm"),
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45, vjust = 0, hjust = 0))
