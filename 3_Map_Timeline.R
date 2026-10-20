@@ -133,7 +133,7 @@ ggplot() +
                    bar_cols = c("gray50", "white")) +
   
   #Make it pretty
-  coord_sf(xlim = c(-89.80, -89.4), ylim = c(45.94, 46.27),
+  coord_sf(xlim = c(-89.80, -89.4), ylim = c(45.97, 46.27),
            expand = FALSE, crs = 4326) +
   theme_minimal() + 
   theme(legend.position = 'none', 
@@ -177,9 +177,14 @@ ggplot(lakes, aes(x = year, y = lake, color = manipulation)) +
   scale_color_manual(values = c("#ee9b00", "#e36414","#9a031e",
                                "#6a994e", "#0a9396", "#005f73", 
                                "#5f0f40", "gray70")) +
+  guides(color = guide_legend(ncol = 3, byrow = TRUE),
+         size  = guide_legend(ncol = 3, byrow = TRUE)) +
   theme_minimal() + xlab("") + ylab("") + 
   theme(legend.key.height = unit(0.5, "cm"),
-        legend.title = element_blank())
+        legend.title = element_blank(),
+        legend.key.width = unit(0.4, "cm"),
+        legend.key.spacing.y = unit(0.02, "cm"),
+        legend.position = "top")
 
 # Vertical Orientation
 ggplot(lakes, aes(y = year, x = lake, color = manipulation)) +
@@ -191,6 +196,7 @@ ggplot(lakes, aes(y = year, x = lake, color = manipulation)) +
                                 "#6a994e", "#0a9396", "#005f73", 
                                 "#5f0f40", "gray70")) +
   theme_minimal() + xlab("") + ylab("") + 
+  ylim(2025, 2003) +
   theme(legend.key.height = unit(0.5, "cm"),
         legend.title = element_blank(),
         axis.text.x = element_text(angle = 45, vjust = 0, hjust = 0))
